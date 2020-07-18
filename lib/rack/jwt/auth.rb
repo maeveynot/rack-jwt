@@ -152,6 +152,8 @@ module Rack
         end
 
         @exclude.each do |x|
+          next if x.is_a?(Regexp)
+
           unless x.is_a?(String)
             raise ArgumentError, 'each exclude Array element must be a String'
           end
@@ -167,7 +169,12 @@ module Rack
       end
 
       def path_matches_excluded_path?(env)
-        @exclude.any? { |ex| env['PATH_INFO'].start_with?(ex) }
+        @exclude.any? do |ex|
+          case ex
+          when String; env['PATH_INFO'].start_with?(ex)
+          when Regexp; env['PATH_INFO'] =~ ex
+          end
+        end
       end
 
       def valid_auth_header?(env)
